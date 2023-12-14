@@ -21,7 +21,7 @@ It also features a Dark Mode that is persistent across startups by utilizing the
 
 ![[Create Project Batch File] - Light Mode](https://github.com/BoundToMakeArt/Create-Project-Batch-File/blob/main/Images/%5BCreate%20Project%20Batch%20File%5D%20_-_Light_Mode.png)    ![[Create Project Batch File] - Light Mode](https://github.com/BoundToMakeArt/Create-Project-Batch-File/blob/main/Images/%5BCreate%20Project%20Batch%20File%5D%20_-_Dark_Mode.png)
 
-When the created batch file has completed opening everything you specified, it will notify you using a toast notification.
+When the created batch file has completed opening everything you've specified, it will notify you using a toast notification.
 
 ![[Create Project Batch File] - Toast Notification](https://github.com/BoundToMakeArt/Create-Project-Batch-File/blob/main/Images/%5BCreate%20Project%20Batch%20File%5D_-_Toast_Notification.png)
 
@@ -46,8 +46,8 @@ After you've run that script once, you can delete it.
 ## Usage
 - Make sure that the "[Create Project Batch File].py" script and the "[Create Project Batch File] Util" folder are in the same directory.
 - Start the "[Create Project Batch File].py" script
-- Drag and drop any of the following into the main window: folders, files, programs and/or URLs
-- Click on "Write to file and exit"
+- Drag and drop any of the following into the main window: folders, files, programs and/or URLs (or use the "Select Files/Folders" button to start the file picker)
+- Click on the "Write to file and exit" button
 - Rename the newly created "open_prepared_items.bat" file to the name of your project
 - Store the .bat file where your project is stored
 - Each time you're ready to work, just double-click the .bat file and grab a drink as the batch file opens everything for you, preparing your wokrspace
