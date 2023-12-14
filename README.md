@@ -27,7 +27,7 @@ When the created batch file has completed opening everything you've specified, i
 
 For larger PureRef files (500mb+), the Python script adds 32 second increments for each 500mb of a PureRef file's size to the delay in the batch file. This is done to make sure that large PureRef files have time to fully load before the script notifies you that it has completed opening everything.
 
-Icon for the toast notification acquired from [Icon Link](https://www.flaticon.com/free-icon/open-box_869078)
+Icon for the toast notification acquired from [FLATICON](https://www.flaticon.com/free-icon/open-box_869078)
 
 ## Requirments
 
