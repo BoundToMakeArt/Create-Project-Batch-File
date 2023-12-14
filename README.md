@@ -50,4 +50,5 @@ After you've run that script once, you can delete it.
 - Click on "Write to file and exit"
 - Rename the newly created "open_prepared_items.bat" file to the name of your project
 - Store the .bat file where your project is stored
-- When you're ready to work, just double-click the .bat file and grab a drink as the batch file opens everything for you, preparing your wokrspace
+- Each time you're ready to work, just double-click the .bat file and grab a drink as the batch file opens everything for you, preparing your wokrspace
+- If you ever move the script and its Util folder to a new directory (they must remain together in the same directory for the script to work), just make the batch file again using the same process and it will automatically update the path to the toast notification script (that's how it displays toast notifications)
