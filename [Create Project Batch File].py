@@ -10,6 +10,7 @@ import ctypes
 import re
 from PyQt5.QtCore import Qt
 from win10toast import ToastNotifier
+from urllib.parse import unquote
 
 # Get the absolute path of the current script
 script_path = os.path.realpath(__file__)
@@ -156,18 +157,19 @@ class DragDropWindow(QMainWindow):
             if file.lower().endswith(('.lnk', '.url')):
                 actual_path = extract_path_from_lnk(file)
                 if actual_path:
+                    actual_path = actual_path.replace('%20', ' ')
                     self.file_paths.append(actual_path)
                     self.text_edit.append(actual_path)
             else:
                 self.file_paths.append(file)
                 self.text_edit.append(file)
 
-        # Check for dropped URLs that don't have a file extension
+        # Check for dropped URLs with different protocols
         text = event.mimeData().text()
-        urls = re.findall(r'(https?://\S+)', text)
+        urls = re.findall(r'(?:(?:https?|obsidian|ftp(?:s)?)://\S+)', text)
         for url in urls:
-            self.urls.append(url)
-            self.text_edit.append(url)
+                self.urls.append(url)
+                self.text_edit.append(url)
 
     def select_files(self):
         root = tk.Tk()
@@ -185,7 +187,19 @@ class DragDropWindow(QMainWindow):
     def update_file_paths(self):
         text = self.text_edit.toPlainText()
         current_paths = text.split('\n')
-        self.file_paths = [path for path in current_paths if os.path.exists(path)]
+
+        for path in current_paths:
+            if os.path.exists(path) or path.lower().startswith('file://') or path.lower().startswith('obsidian://'):
+                if path.lower().startswith('obsidian://'):
+                    path = unquote(path.replace('obsidian://', ''))
+                    path = path.replace('%', '%%')
+                    path = path.replace("'", "''")
+                if path.lower().endswith(('.lnk', '.url')):
+                    actual_path = extract_path_from_lnk(path)
+                    if actual_path and actual_path not in self.file_paths:
+                        self.file_paths.append(actual_path)
+                elif path not in self.file_paths:
+                    self.file_paths.append(path)
 
     def write_to_file_and_exit(self):
         if self.file_paths or self.urls:
@@ -200,15 +214,28 @@ class DragDropWindow(QMainWindow):
                             file_size = get_file_size(path)
                             delay = calculate_delay(file_size)
                             largest_pur_delay = max(largest_pur_delay, delay)
-                            batch_file.write(f'start "" "{path}"\n')
+                            path = path.replace('%', '%%')
+                            path = path.replace("'", "''")
+                            path = path.replace("/", "\\")
+                            batch_file.write(f'powershell -Command "$filename = \'{path}\'; Invoke-Item -LiteralPath $filename"\n')
                             batch_file.write(f'timeout /t 1\n')  # Default 1-second delay after each ".pur" file
                         else:
-                            batch_file.write(f'start "" "{path}"\n')
+                            path = path.replace('%', '%%')
+                            path = path.replace("'", "''")
+                            path = path.replace("/", "\\")
+                            batch_file.write(f'powershell -Command "$filename = \'{path}\'; Invoke-Item -LiteralPath $filename"\n')
                             batch_file.write('timeout /t 1\n')
+                    elif path.lower().startswith('obsidian://'):
+                        path = path.replace('%', '%%')
+                        path = path.replace("'", "''")
+                        batch_file.write(f'powershell -Command "Start-Process \'{path}\' -WindowStyle Hidden\"\n')
+                        batch_file.write('timeout /t 1\n')
 
                 for url in self.urls:
-                    batch_file.write(f'start "" "{url}"\n')
-                    batch_file.write('timeout /t 1\n')
+                     url = url.replace('%', '%%')
+                     url = url.replace("'", "''")
+                     batch_file.write(f'powershell -Command "Start-Process \'{url}\' -WindowStyle Hidden\"\n')
+                     batch_file.write('timeout /t 1\n')
 
                 batch_file.write(f'timeout /t {largest_pur_delay}\n')  # Large delay after the largest ".pur" file
                 batch_file.write(f"start pythonw {toast_notification_path_formatted}\n")  # Run PowerShell script
@@ -249,36 +276,6 @@ def get_file_size(file_path):
     elif os.path.exists(file_path):
         return os.path.getsize(file_path)
     return 0
-
-
-def create_batch_file(file_paths):
-    with open('open_prepared_items.bat', 'w') as batch_file:
-        batch_file.write('@echo off\n')
-
-        last_pur_index = -1  # To keep track of the last ".pur" file index
-        largest_pur_delay = 1  # To keep track of the delay for the largest ".pur" file
-        for i, path in enumerate(file_paths):
-            if os.path.exists(path):
-                if os.path.isfile(path):
-                    file_size = get_file_size(path)
-                    delay = calculate_delay(file_size)
-                    if path.lower().endswith('.pur') or get_target_file_extension(path).endswith('.pur'):
-                        last_pur_index = i
-                        largest_pur_delay = max(largest_pur_delay, delay)
-                        batch_file.write(f'start "" "{path}"\n')
-                        batch_file.write(f'timeout /t 1\n')  # Default 1-second delay after each ".pur" file
-                    else:
-                        batch_file.write(f'start "" "{path}"\n')
-                        batch_file.write(f'timeout /t {delay}\n')
-                elif os.path.isdir(path):
-                    batch_file.write(f'start "" "{path}"\n')
-                    batch_file.write(f'timeout /t 1\n')  # Default 1-second delay after each folder
-
-        batch_file.write(f'timeout /t 1\n')
-        batch_file.write(f'timeout /t {largest_pur_delay}\n')  # Large delay after the largest ".pur" file
-        batch_file.write(f"start pythonw {toast_notification_path_formatted}\n")  # Run PowerShell script
-        batch_file.write('taskkill /f /im cmd.exe\n')  # Close the command prompt window
-
 
 def minimize_cmd_window():
     # Get the handle for the console window and minimize it
